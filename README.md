@@ -1,5 +1,7 @@
 # GitHub Contributors Viewer
 
+[Open the Web App](https://test-bit-sys.github.io/github-contributors-viewer/)
+
 A lightweight contributor explorer for public GitHub repositories, available as both a Python desktop application and a standalone web page. Fetch contributors, search and sort results, inspect profiles, and export the rows you need.
 
 ## Features
