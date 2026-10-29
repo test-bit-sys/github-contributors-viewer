@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Contributors Viewer</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            bgMain: '#0a0a0c',
+            bgCard: '#121316',
+            bgInput: '#16181d',
+            borderDark: '#22242a',
+            borderHover: '#333640',
+            textLight: '#fcfbf8',
+            textMuted: '#8e929f',
+            amberAccent: '#f59e0b',
+            amberHover: '#eab308',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0a0a0c;
+      color: #fcfbf8;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a0a0c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #22242a;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #333640;
+    }
+
+    /* Amber glow utility */
+    .amber-glow:focus-within {
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+      border-color: #f59e0b;
+    }
+    
+    .btn-amber {
+      background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+      color: #0a0a0c;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-amber:hover:not(:disabled) {
+      background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);
+    }
+    .btn-amber:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Indeterminate progress animation */
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%) scaleX(0.2); }
+      50% { transform: translateX(0%) scaleX(0.5); }
+      100% { transform: translateX(100%) scaleX(0.2); }
+    }
+    .animate-indeterminate {
+      animation: indeterminate 1.4s infinite linear;
+      transform-origin: left;
+    }
+
+    /* Custom Checkbox */
+    .custom-checkbox {
+      appearance: none;
+      background-color: #16181d;
+      margin: 0;
+      font: inherit;
+      color: #f59e0b;
+      width: 1.15rem;
+      height: 1.15rem;
+      border: 1px solid #2e313a;
+      border-radius: 0.25rem;
+      display: grid;
+      place-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+    }
+    .custom-checkbox::before {
+      content: "";
+      width: 0.65rem;
+      height: 0.65rem;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1em 1em #0a0a0c;
+      transform-origin: center;
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+    .custom-checkbox:checked {
+      background-color: #f59e0b;
+      border-color: #f59e0b;
+    }
+    .custom-checkbox:checked::before {
+      transform: scale(1);
+    }
+    .custom-checkbox:focus-visible {
+      outline: 2px solid rgba(245, 158, 11, 0.5);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amberAccent selection:text-bgMain">
+
+  <!-- Top Header -->
+  <header class="border-b border-borderDark bg-bgCard/80 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-amberAccent/10 border border-amberAccent/30 flex items-center justify-center text-amberAccent">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
+            <path d="M9 18c-4.51 2-5-2-7-2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base sm:text-lg tracking-tight text-textLight">GitHub Contributors Viewer</h1>
+            <span class="hidden sm:inline-block text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amberAccent/10 text-amberAccent border border-amberAccent/20">Web Edition</span>
+          </div>
+          <p class="text-xs text-textMuted hidden sm:block">Fast client-side repository contributor explorer &amp; exporter</p>
+        </div>
+      </div>
+
+      <!-- Live API Rate Limit & Cache Status -->
+      <div class="flex items-center gap-3">
+        <div id="cacheBadge" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-md bg-bgInput border border-borderDark text-xs text-textMuted">
+          <svg class="w-3.5 h-3.5 text-amberAccent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span id="cacheBadgeText">Loaded from cache</span>
+          <button id="clearCacheBtn" title="Clear cached data for this repository" class="ml-1 text-textMuted hover:text-red-400 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div id="rateLimitBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bgInput border border-borderDark text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-500" id="rateDot"></span>
+          <span class="text-textMuted">API:</span>
+          <span id="rateLimitValue" class="text-textLight font-medium">-- / --</span>
+          <span id="rateResetTime" class="text-textMuted hidden md:inline"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+
+    <!-- Control Panel Card -->
+    <section class="bg-bgCard border border-borderDark rounded-xl p-4 sm:p-5 shadow-lg space-y-4">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- Repository URL Input -->
+        <div class="lg:col-span-7 space-y-1.5">
+          <label for="repoInput" class="block text-xs font-medium uppercase tracking-wider text-textMuted">
+            Repository URL or <span class="font-mono text-textLight">owner/repo</span>
+          </label>
+          <div class="flex gap-2">
+            <div class="relative flex-1 flex items-center bg-bgInput border border-borderDark rounded-lg amber-glow transition-all">
+              <span class="pl-3 pr-2 text-textMuted">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                </svg>
+              </span>
+              <input
+                id="repoInput"
+                type="text"
+                value="https://github.com/storytold/photocraft"
+                placeholder="https://github.com/owner/repo or owner/repo"
+                class="w-full bg-transparent py-2.5 pr-3 text-sm text-textLight placeholder-textMuted/50 focus:outline-none font-mono"
+              />
+              <button
+                id="clearRepoInputBtn"
+                type="button"
+                title="Clear input"
+                class="pr-2.5 text-textMuted hover:text-textLight transition-colors"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <button
+              id="fetchBtn"
+              type="button"
+              class="btn-amber px-4 sm:px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 shrink-0 shadow-sm"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                <path d="M16 16h5v5"/>
+              </svg>
+              <span>Fetch Contributors</span>
+            </button>
+
+            <button
+              id="cancelBtn"
+              type="button"
+              disabled
+              class="px-3.5 py-2.5 rounded-lg text-sm font-medium bg-bgInput border border-borderDark text-textMuted hover:text-red-400 hover:border-red-500/40 disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1.5 shrink-0"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+              <span class="hidden sm:inline">Cancel</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Optional GitHub Token Input -->
+        <div class="lg:col-span-5 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label for="tokenInput" class="block text-xs font-medium uppercase tracking-wider text-textMuted">
+              GitHub Token <span class="text-[11px] lowercase font-normal text-textMuted/70">(optional, raises rate limit to 5000/hr)</span>
+            </label>
+          </div>
+          <div class="relative flex items-center bg-bgInput border border-borderDark rounded-lg amber-glow transition-all">
+            <span class="pl-3 pr-2 text-textMuted">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+              </svg>
+            </span>
+            <input
+              id="tokenInput"
+              type="password"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              autocomplete="off"
+              class="w-full bg-transparent py-2.5 pr-9 text-sm text-textLight placeholder-textMuted/40 focus:outline-none font-mono"
+            />
+            <button
+              id="toggleTokenBtn"
+              type="button"
+              title="Show/Hide Token"
+              class="absolute right-2.5 text-textMuted hover:text-textLight transition-colors"
+            >
+              <svg id="eyeIconOpen" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="eyeIconClosed" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                <line x1="2" y1="2" x2="22" y2="22"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Repositories & Checkboxes Row -->
+      <div class="pt-2 border-t border-borderDark/70 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <!-- Options Checkboxes -->
+        <div class="flex flex-wrap items-center gap-5">
+          <label class="inline-flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-textLight/90 hover:text-textLight">
+            <input id="detailsCheckbox" type="checkbox" class="custom-checkbox" />
+            <span>Fetch real names, company &amp; location <span class="text-textMuted text-xs">(8x concurrent pool)</span></span>
+          </label>
+
+          <label class="inline-flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-textLight/90 hover:text-textLight">
+            <input id="anonCheckbox" type="checkbox" checked class="custom-checkbox" />
+            <span>Include anonymous contributors</span>
+          </label>
+        </div>
+
+        <!-- Recent Repositories Pills -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-textMuted font-medium">Recent:</span>
+          <div id="recentReposContainer" class="flex items-center gap-1.5 flex-wrap">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Progress Bar & Live Status Banner -->
+      <div id="statusContainer" class="pt-2 flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2 text-textMuted">
+            <span id="statusSpinner" class="hidden w-3.5 h-3.5 border-2 border-amberAccent border-t-transparent rounded-full animate-spin"></span>
+            <span id="statusText" class="font-mono text-textLight/90">Ready. Enter a repository and click Fetch Contributors.</span>
+          </div>
+          <span id="progressPercent" class="font-mono text-amberAccent hidden">0%</span>
+        </div>
+        <div class="w-full h-1.5 bg-bgInput rounded-full overflow-hidden border border-borderDark/60">
+          <div id="progressBar" class="h-full bg-amberAccent transition-all duration-150 w-0"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Instant Filter, Search & Export Toolbar -->
+    <section class="bg-bgCard border border-borderDark rounded-xl p-4 shadow-lg space-y-3">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        
+        <!-- Left: Search Input & Min Contributions -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+          <!-- Search Box -->
+          <div class="relative flex-1 max-w-md flex items-center bg-bgInput border border-borderDark rounded-lg amber-glow transition-all">
+            <span class="pl-3 pr-2 text-textMuted">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+            <input
+              id="searchInput"
+              type="text"
+              placeholder="Instant filter username, name, company, location... (Ctrl+F)"
+              class="w-full bg-transparent py-2 pr-16 text-sm text-textLight placeholder-textMuted/50 focus:outline-none"
+            />
+            <div class="absolute right-2 flex items-center gap-1">
+              <button
+                id="clearSearchBtn"
+                type="button"
+                class="hidden px-1.5 py-0.5 text-xs rounded bg-borderDark text-textMuted hover:text-textLight transition-colors"
+              >
+                Clear
+              </button>
+              <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-bgCard text-textMuted border border-borderDark rounded">ESC</kbd>
+            </div>
+          </div>
+
+          <!-- Min Contributions Filter -->
+          <div class="flex items-center gap-2 bg-bgInput border border-borderDark rounded-lg px-3 py-1.5 amber-glow transition-all">
+            <label for="minContribInput" class="text-xs text-textMuted whitespace-nowrap">Min commits:</label>
+            <input
+              id="minContribInput"
+              type="number"
+              min="0"
+              max="1000000"
+              value="0"
+              class="w-20 bg-transparent text-sm font-mono text-textLight focus:outline-none text-right"
+            />
+          </div>
+        </div>
+
+        <!-- Right: Export Buttons -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-textMuted mr-1 hidden sm:inline">Export shown:</span>
+          <button
+            id="exportCsvBtn"
+            type="button"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-bgInput border border-borderDark text-textLight hover:border-amberAccent/60 hover:text-amberAccent transition-all flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            CSV
+          </button>
+          <button
+            id="exportJsonBtn"
+            type="button"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-bgInput border border-borderDark text-textLight hover:border-amberAccent/60 hover:text-amberAccent transition-all flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            JSON
+          </button>
+          <button
+            id="exportMdBtn"
+            type="button"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-bgInput border border-borderDark text-textLight hover:border-amberAccent/60 hover:text-amberAccent transition-all flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 7V4h16v3"/>
+              <path d="M9 20h6"/>
+              <path d="M12 4v16"/>
+            </svg>
+            Markdown
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Summary Counter Bar -->
+      <div class="pt-2 border-t border-borderDark/60 flex flex-wrap items-center justify-between gap-2 text-xs text-textMuted">
+        <div id="summaryStats" class="font-mono">
+          Showing <span class="text-textLight font-semibold">0</span> of <span class="text-textLight font-semibold">0</span> contributors (<span class="text-textLight">0</span> anonymous) &nbsp;|&nbsp; Total contributions: <span class="text-amberAccent font-semibold">0</span>
+        </div>
+        <div id="activeRepoLabel" class="font-mono text-textMuted"></div>
+      </div>
+    </section>
+
+    <!-- Contributors Table Card -->
+    <section class="bg-bgCard border border-borderDark rounded-xl shadow-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-borderDark bg-bgInput/70 text-[11px] font-semibold uppercase tracking-wider text-textMuted select-none">
+              <th data-sort="rank" class="sortable-th py-3.5 px-4 w-16 text-center cursor-pointer hover:text-textLight transition-colors">
+                <div class="inline-flex items-center justify-center gap-1">
+                  <span>#</span>
+                  <span class="sort-icon" data-col="rank"></span>
+                </div>
+              </th>
+              <th data-sort="login" class="sortable-th py-3.5 px-4 cursor-pointer hover:text-textLight transition-colors">
+                <div class="inline-flex items-center gap-1">
+                  <span>Username</span>
+                  <span class="sort-icon" data-col="login"></span>
+                </div>
+              </th>
+              <th data-sort="name" class="sortable-th py-3.5 px-4 cursor-pointer hover:text-textLight transition-colors">
+                <div class="inline-flex items-center gap-1">
+                  <span>Name</span>
+                  <span class="sort-icon" data-col="name"></span>
+                </div>
+              </th>
+              <th data-sort="contributions" class="sortable-th py-3.5 px-4 w-48 cursor-pointer hover:text-textLight transition-colors">
+                <div class="inline-flex items-center gap-1">
+                  <span>Contributions</span>
+                  <span class="sort-icon" data-col="contributions"></span>
+                </div>
+              </th>
+              <th data-sort="company" class="sortable-th py-3.5 px-4 cursor-pointer hover:text-textLight transition-colors">
+                <div class="inline-flex items-center gap-1">
+                  <span>Company</span>
+                  <span class="sort-icon" data-col="company"></span>
+                </div>
+              </th>
+              <th data-sort="location" class="sortable-th py-3.5 px-4 cursor-pointer hover:text-textLight transition-colors">
+                <div class="inline-flex items-center gap-1">
+                  <span>Location</span>
+                  <span class="sort-icon" data-col="location"></span>
+                </div>
+              </th>
+              <th class="py-3.5 px-4 w-28 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-borderDark/60 text-sm">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="py-16 px-4 text-center space-y-3">
+        <div class="w-12 h-12 rounded-full bg-bgInput border border-borderDark mx-auto flex items-center justify-center text-textMuted">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="space-y-1">
+          <p id="emptyStateTitle" class="text-sm font-medium text-textLight">No contributors loaded yet</p>
+          <p id="emptyStateSubtitle" class="text-xs text-textMuted max-w-md mx-auto">
+            Click "Fetch Contributors" above to query the GitHub REST API and organize contributors in a sortable table.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-borderDark py-4 px-4 sm:px-6 lg:px-8 mt-auto text-xs text-textMuted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>GitHub Contributors Viewer &mdash; Static Single-File Web App ready for GitHub Pages</span>
+      <span class="font-mono">Shortcuts: <kbd class="px-1.5 py-0.5 bg-bgCard border border-borderDark rounded">Ctrl+F</kbd> Search &middot; <kbd class="px-1.5 py-0.5 bg-bgCard border border-borderDark rounded">Esc</kbd> Clear</span>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Application Script -->
+  <script>
+    (function () {
+      'use strict';
+
+      // --- Constants & Storage Keys ---
+      const DEFAULT_REPO = 'https://github.com/storytold/photocraft';
+      const STORAGE_CFG_KEY = 'gh_contributors_viewer_cfg_v1';
+      const STORAGE_CACHE_PREFIX = 'gh_contributors_cache_v1__';
+      const API_BASE = 'https://api.github.com';
+
+      // --- State ---
+      let state = {
+        repo: '',
+        people: [],
+        shownRows: [],
+        sortCol: 'rank',
+        sortRev: false,
+        abortController: null,
+        isFetching: false,
+        config: {
+          repos: [DEFAULT_REPO],
+          token: '',
+          details: false,
+          anon: true
+        }
+      };
+
+      // --- DOM Elements ---
+      const els = {
+        repoInput: document.getElementById('repoInput'),
+        clearRepoInputBtn: document.getElementById('clearRepoInputBtn'),
+        tokenInput: document.getElementById('tokenInput'),
+        toggleTokenBtn: document.getElementById('toggleTokenBtn'),
+        eyeIconOpen: document.getElementById('eyeIconOpen'),
+        eyeIconClosed: document.getElementById('eyeIconClosed'),
+        detailsCheckbox: document.getElementById('detailsCheckbox'),
+        anonCheckbox: document.getElementById('anonCheckbox'),
+        fetchBtn: document.getElementById('fetchBtn'),
+        cancelBtn: document.getElementById('cancelBtn'),
+        recentReposContainer: document.getElementById('recentReposContainer'),
+        statusSpinner: document.getElementById('statusSpinner'),
+        statusText: document.getElementById('statusText'),
+        progressPercent: document.getElementById('progressPercent'),
+        progressBar: document.getElementById('progressBar'),
+        searchInput: document.getElementById('searchInput'),
+        clearSearchBtn: document.getElementById('clearSearchBtn'),
+        minContribInput: document.getElementById('minContribInput'),
+        exportCsvBtn: document.getElementById('exportCsvBtn'),
+        exportJsonBtn: document.getElementById('exportJsonBtn'),
+        exportMdBtn: document.getElementById('exportMdBtn'),
+        summaryStats: document.getElementById('summaryStats'),
+        activeRepoLabel: document.getElementById('activeRepoLabel'),
+        tableBody: document.getElementById('tableBody'),
+        emptyState: document.getElementById('emptyState'),
+        emptyStateTitle: document.getElementById('emptyStateTitle'),
+        emptyStateSubtitle: document.getElementById('emptyStateSubtitle'),
+        cacheBadge: document.getElementById('cacheBadge'),
+        cacheBadgeText: document.getElementById('cacheBadgeText'),
+        clearCacheBtn: document.getElementById('clearCacheBtn'),
+        rateLimitValue: document.getElementById('rateLimitValue'),
+        rateResetTime: document.getElementById('rateResetTime'),
+        rateDot: document.getElementById('rateDot'),
+        toastContainer: document.getElementById('toastContainer'),
+        sortableHeaders: document.querySelectorAll('.sortable-th')
+      };
+
+      // --- Helper: Toast Notifications (No alert/confirm) ---
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        const borderColor =
+          type === 'error' ? 'border-red-500/60' :
+          type === 'success' ? 'border-amberAccent/60' : 'border-borderDark';
+        const iconSvg =
+          type === 'error'
+            ? `<svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+            : `<svg class="w-4 h-4 text-amberAccent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+        toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-bgCard border ${borderColor} text-xs text-textLight shadow-xl transition-all duration-200 opacity-0 translate-y-2`;
+        toast.innerHTML = `${iconSvg}<span>${escapeHtml(message)}</span>`;
+        els.toastContainer.appendChild(toast);
+
+        requestAnimationFrame(() => {
+          toast.classList.remove('opacity-0', 'translate-y-2');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 220);
+        }, 3200);
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      // --- Helper: Parse GitHub Repo String ---
+      function parseRepo(text) {
+        const cleaned = (text || '').trim();
+        let match = cleaned.match(/github\.com[/:]([\w.-]+)\/([\w.-]+)/i);
+        let owner, name;
+        if (match) {
+          owner = match[1];
+          name = match[2];
+        } else {
+          match = cleaned.match(/^([\w.-]+)\/([\w.-]+)$/);
+          if (!match) {
+            throw new Error("Enter a valid GitHub URL or 'owner/repo'.");
+          }
+          owner = match[1];
+          name = match[2];
+        }
+        if (name.endsWith('.git')) {
+          name = name.slice(0, -4);
+        }
+        return `${owner}/${name}`;
+      }
+
+      function parseRepoSafe(text) {
+        try {
+          return parseRepo(text);
+        } catch {
+          return '';
+        }
+      }
+
+      // --- Config & LocalStorage Cache ---
+      function loadConfig() {
+        try {
+          const raw = localStorage.getItem(STORAGE_CFG_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            state.config = {
+              repos: Array.isArray(parsed.repos) && parsed.repos.length ? parsed.repos : [DEFAULT_REPO],
+              token: parsed.token || '',
+              details: Boolean(parsed.details),
+              anon: parsed.anon !== undefined ? Boolean(parsed.anon) : true
+            };
+          }
+        } catch {
+          // fallback to default
+        }
+      }
+
+      function saveConfig() {
+        try {
+          localStorage.setItem(STORAGE_CFG_KEY, JSON.stringify(state.config));
+        } catch {
+          // ignore quota errors
+        }
+      }
+
+      function getCacheKey(repo) {
+        return STORAGE_CACHE_PREFIX + repo.replace('/', '__').toLowerCase();
+      }
+
+      function loadCache(repo) {
+        if (!repo) return null;
+        try {
+          const raw = localStorage.getItem(getCacheKey(repo));
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch {
+          return null;
+        }
+      }
+
+      function saveCache(repo, people) {
+        if (!repo) return;
+        try {
+          const payload = {
+            timestamp: Date.now(),
+            people: people
+          };
+          localStorage.setItem(getCacheKey(repo), JSON.stringify(payload));
+        } catch {
+          // If localStorage is full, silently ignore
+        }
+      }
+
+      function removeCache(repo) {
+        if (!repo) return;
+        try {
+          localStorage.removeItem(getCacheKey(repo));
+        } catch {}
+      }
+
+      // --- Rate Limit Header Parser ---
+      function updateRateLimitFromHeaders(headers) {
+        if (!headers) return;
+        const remaining = headers.get('x-ratelimit-remaining');
+        const limit = headers.get('x-ratelimit-limit');
+        const reset = headers.get('x-ratelimit-reset');
+
+        if (remaining !== null && limit !== null) {
+          els.rateLimitValue.textContent = `${remaining} / ${limit}`;
+          const remNum = parseInt(remaining, 10);
+          if (remNum === 0) {
+            els.rateDot.className = 'w-2 h-2 rounded-full bg-red-500';
+          } else if (remNum < 15) {
+            els.rateDot.className = 'w-2 h-2 rounded-full bg-amberAccent';
+          } else {
+            els.rateDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+          }
+        }
+
+        if (reset) {
+          const resetDate = new Date(parseInt(reset, 10) * 1000);
+          const timeStr = resetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          els.rateResetTime.textContent = `(resets ${timeStr})`;
+        }
+      }
+
+      // --- GitHub API Request Wrapper ---
+      function buildHeaders(token) {
+        const headers = {
+          'Accept': 'application/vnd.github+json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+      }
+
+      async function checkResponse(res) {
+        updateRateLimitFromHeaders(res.headers);
+        if (res.status === 404) {
+          throw new Error('Repository not found (or it is private).');
+        }
+        if ((res.status === 403 || res.status === 429) && res.headers.get('x-ratelimit-remaining') === '0') {
+          const reset = res.headers.get('x-ratelimit-reset');
+          let when = '';
+          if (reset) {
+            const d = new Date(parseInt(reset, 10) * 1000);
+            when = ` Resets at ${d.toLocaleTimeString()}.`;
+          }
+          throw new Error(`GitHub API rate limit reached. Add a token to raise it.${when}`);
+        }
+        if (res.status === 401) {
+          throw new Error('Invalid GitHub Personal Access Token.');
+        }
+        if (!res.ok) {
+          throw new Error(`GitHub API error (HTTP ${res.status}).`);
+        }
+      }
+
+      function parseNextLink(linkHeader) {
+        if (!linkHeader) return null;
+        const links = linkHeader.split(',');
+        for (const part of links) {
+          const section = part.split(';');
+          if (section.length < 2) continue;
+          const url = section[0].replace(/<(.*)>/, '$1').trim();
+          const rel = section[1].trim();
+          if (rel === 'rel="next"') {
+            return url;
+          }
+        }
+        return null;
+      }
+
+      // --- Fetch Paginated Contributors ---
+      async function fetchContributorsPages(repo, token, includeAnon, signal, onStatus) {
+        const anonParam = includeAnon ? 'true' : 'false';
+        let url = `${API_BASE}/repos/${repo}/contributors?per_page=100&anon=${anonParam}`;
+        const people = [];
+        let page = 0;
+        const headers = buildHeaders(token);
+
+        while (url) {
+          if (signal.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+          }
+          const res = await fetch(url, { headers, signal });
+          await checkResponse(res);
+          const data = await res.json();
+          page += 1;
+
+          if (Array.isArray(data)) {
+            for (const c of data) {
+              people.push({
+                login: c.login || c.name || c.email || 'anonymous',
+                name: c.name || '',
+                contributions: c.contributions || 0,
+                profile: c.html_url || '',
+                avatar: c.avatar_url || '',
+                type: c.type || 'Anonymous',
+                company: '',
+                location: ''
+              });
+            }
+          }
+
+          onStatus(`Fetched page ${page} (${people.length} contributors)...`);
+          url = parseNextLink(res.headers.get('link'));
+        }
+
+        return people;
+      }
+
+      // --- Concurrent Worker Pool (limit = 8) for User Details ---
+      async function fetchContributorDetails(people, token, signal, onProgress) {
+        const users = people.filter(p => p.type === 'User' && p.login);
+        if (users.length === 0) return;
+
+        const concurrency = 8;
+        let index = 0;
+        let completed = 0;
+        const headers = buildHeaders(token);
+
+        async function worker() {
+          while (index < users.length) {
+            if (signal.aborted) {
+              throw new DOMException('Aborted', 'AbortError');
+            }
+            const currentIndex = index++;
+            const person = users[currentIndex];
+
+            try {
+              const res = await fetch(`${API_BASE}/users/${encodeURIComponent(person.login)}`, {
+                headers,
+                signal
+              });
+              updateRateLimitFromHeaders(res.headers);
+
+              if (res.ok) {
+                const detail = await res.json();
+                person.name = detail.name || '';
+                person.company = detail.company || '';
+                person.location = detail.location || '';
+              } else if (res.status === 403 || res.status === 429) {
+                await checkResponse(res);
+              }
+            } catch (err) {
+              if (err.name === 'AbortError') throw err;
+              // If rate-limited mid-pool, propagate error
+              if (err.message && err.message.includes('rate limit')) throw err;
+            }
+
+            completed += 1;
+            onProgress(completed, users.length);
+          }
+        }
+
+        const workers = Array.from({ length: Math.min(concurrency, users.length) }, () => worker());
+        await Promise.all(workers);
+      }
+
+      // --- Organize & Rank ---
+      function organizeContributors(people) {
+        people.sort((a, b) => {
+          if (b.contributions !== a.contributions) {
+            return b.contributions - a.contributions;
+          }
+          return String(a.login).toLowerCase().localeCompare(String(b.login).toLowerCase());
+        });
+        people.forEach((p, idx) => {
+          p.rank = idx + 1;
+        });
+        return people;
+      }
+
+      // --- UI Status & Progress Helpers ---
+      function setProgressIndeterminate(active) {
+        if (active) {
+          els.progressBar.className = 'h-full bg-amberAccent w-full animate-indeterminate';
+          els.progressPercent.classList.add('hidden');
+          els.statusSpinner.classList.remove('hidden');
+        } else {
+          els.progressBar.className = 'h-full bg-amberAccent transition-all duration-150 w-0';
+          els.progressPercent.classList.add('hidden');
+          els.statusSpinner.classList.add('hidden');
+        }
+      }
+
+      function setProgressDeterminate(done, total) {
+        const pct = Math.round((done / Math.max(total, 1)) * 100);
+        els.progressBar.className = 'h-full bg-amberAccent transition-all duration-150';
+        els.progressBar.style.width = `${pct}%`;
+        els.progressPercent.textContent = `${pct}%`;
+        els.progressPercent.classList.remove('hidden');
+        els.statusSpinner.classList.remove('hidden');
+      }
+
+      function resetProgress() {
+        els.progressBar.className = 'h-full bg-amberAccent transition-all duration-150 w-0';
+        els.progressBar.style.width = '0%';
+        els.progressPercent.classList.add('hidden');
+        els.statusSpinner.classList.add('hidden');
+      }
+
+      // --- Recent Repositories Rendering ---
+      function renderRecentRepos() {
+        els.recentReposContainer.innerHTML = '';
+        const repos = state.config.repos || [];
+        repos.slice(0, 6).forEach(repoUrl => {
+          const shortName = parseRepoSafe(repoUrl) || repoUrl;
+          const isCurrent = shortName.toLowerCase() === state.repo.toLowerCase();
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `px-2.5 py-1 rounded-md text-xs font-mono transition-all border ${
+            isCurrent
+              ? 'bg-amberAccent/15 text-amberAccent border-amberAccent/40'
+              : 'bg-bgInput text-textMuted border-borderDark hover:text-textLight hover:border-borderHover'
+          }`;
+          btn.textContent = shortName;
+          btn.addEventListener('click', () => {
+            els.repoInput.value = repoUrl;
+            const parsed = parseRepoSafe(repoUrl);
+            if (!loadFromCacheIfAvailable(parsed)) {
+              startFetch();
+            }
+          });
+          els.recentReposContainer.appendChild(btn);
+        });
+      }
+
+      function rememberRepo(repo) {
+        const fullUrl = `https://github.com/${repo}`;
+        const existing = (state.config.repos || []).filter(
+          r => parseRepoSafe(r).toLowerCase() !== repo.toLowerCase()
+        );
+        state.config.repos = [fullUrl, ...existing].slice(0, 12);
+        state.config.token = els.tokenInput.value.trim();
+        state.config.details = els.detailsCheckbox.checked;
+        state.config.anon = els.anonCheckbox.checked;
+        saveConfig();
+        els.repoInput.value = fullUrl;
+        renderRecentRepos();
+      }
+
+      // --- Load From Cache ---
+      function loadFromCacheIfAvailable(repo) {
+        if (!repo) return false;
+        const cached = loadCache(repo);
+        if (cached && Array.isArray(cached.people)) {
+          state.repo = repo;
+          state.people = cached.people;
+          els.activeRepoLabel.textContent = repo;
+          els.cacheBadge.classList.remove('hidden');
+          els.cacheBadge.classList.add('flex');
+
+          const ageMinutes = Math.max(1, Math.round((Date.now() - (cached.timestamp || Date.now())) / 60000));
+          els.cacheBadgeText.textContent = ageMinutes < 60
+            ? `Cached (${ageMinutes}m ago)`
+            : `Cached`;
+
+          els.statusText.textContent = `Loaded ${state.people.length} contributors for ${repo} from local cache. Click Fetch to refresh.`;
+          renderRecentRepos();
+          refreshTable();
+          return true;
+        }
+        return false;
+      }
+
+      // --- Main Fetch Flow ---
+      async function startFetch() {
+        if (state.isFetching) return;
+
+        let repo;
+        try {
+          repo = parseRepo(els.repoInput.value);
+        } catch (err) {
+          showToast(err.message, 'error');
+          els.repoInput.focus();
+          return;
+        }
+
+        state.isFetching = true;
+        state.abortController = new AbortController();
+        const signal = state.abortController.signal;
+
+        els.fetchBtn.disabled = true;
+        els.cancelBtn.disabled = false;
+        els.cacheBadge.classList.add('hidden');
+        els.cacheBadge.classList.remove('flex');
+
+        setProgressIndeterminate(true);
+        els.statusText.textContent = `Fetching contributors for ${repo}...`;
+
+        const token = els.tokenInput.value.trim();
+        const wantDetails = els.detailsCheckbox.checked;
+        const includeAnon = els.anonCheckbox.checked;
+
+        try {
+          const people = await fetchContributorsPages(
+            repo,
+            token,
+            includeAnon,
+            signal,
+            statusMsg => {
+              els.statusText.textContent = statusMsg;
+            }
+          );
+
+          if (wantDetails && people.length > 0) {
+            setProgressDeterminate(0, people.filter(p => p.type === 'User').length);
+            await fetchContributorDetails(people, token, signal, (done, total) => {
+              setProgressDeterminate(done, total);
+              els.statusText.textContent = `Fetching user details ${done} / ${total}...`;
+            });
+          }
+
+          const organized = organizeContributors(people);
+          state.repo = repo;
+          state.people = organized;
+          els.activeRepoLabel.textContent = repo;
+
+          saveCache(repo, organized);
+          rememberRepo(repo);
+          refreshTable();
+
+          els.statusText.textContent = `Done: ${organized.length} contributors loaded for ${repo}.`;
+          showToast(`Loaded ${organized.length} contributors from ${repo}`, 'success');
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            els.statusText.textContent = 'Fetch cancelled by user.';
+            showToast('Fetch operation cancelled', 'info');
+          } else {
+            els.statusText.textContent = `Error: ${err.message}`;
+            showToast(err.message, 'error');
+          }
+        } finally {
+          state.isFetching = false;
+          state.abortController = null;
+          els.fetchBtn.disabled = false;
+          els.cancelBtn.disabled = true;
+          resetProgress();
+        }
+      }
+
+      // --- Table Filtering, Sorting & Rendering ---
+      function refreshTable() {
+        const query = els.searchInput.value.trim().toLowerCase();
+        const terms = query ? query.split(/\s+/) : [];
+        const minC = parseInt(els.minContribInput.value, 10) || 0;
+
+        els.clearSearchBtn.classList.toggle('hidden', query.length === 0);
+
+        const filtered = state.people.filter(p => {
+          if (p.contributions < minC) return false;
+          if (terms.length === 0) return true;
+          const haystack = `${p.login} ${p.name} ${p.company} ${p.location}`.toLowerCase();
+          return terms.every(t => haystack.includes(t));
+        });
+
+        const numericCols = new Set(['rank', 'contributions']);
+        const col = state.sortCol;
+        const rev = state.sortRev ? -1 : 1;
+
+        filtered.sort((a, b) => {
+          if (numericCols.has(col)) {
+            return ((a[col] || 0) - (b[col] || 0)) * rev;
+          }
+          const valA = String(a[col] || '').toLowerCase();
+          const valB = String(b[col] || '').toLowerCase();
+          return valA.localeCompare(valB) * rev;
+        });
+
+        state.shownRows = filtered;
+        renderTableRows(filtered);
+        updateSummaryStats(filtered);
+        updateSortIcons();
+      }
+
+      function renderTableRows(rows) {
+        els.tableBody.innerHTML = '';
+
+        if (rows.length === 0) {
+          els.emptyState.classList.remove('hidden');
+          if (state.people.length > 0) {
+            els.emptyStateTitle.textContent = 'No matching contributors';
+            els.emptyStateSubtitle.textContent = 'Try clearing your search query or lowering the minimum contributions filter.';
+          } else {
+            els.emptyStateTitle.textContent = 'No contributors loaded yet';
+            els.emptyStateSubtitle.textContent = 'Click "Fetch Contributors" above to query the GitHub REST API and organize contributors in a sortable table.';
+          }
+          return;
+        }
+
+        els.emptyState.classList.add('hidden');
+        const maxContribs = Math.max(...state.people.map(p => p.contributions), 1);
+        const fragment = document.createDocumentFragment();
+
+        rows.forEach(person => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-bgInput/60 transition-colors group';
+
+          const pct = Math.max(3, Math.round((person.contributions / maxContribs) * 100));
+          const isAnon = person.type === 'Anonymous' || !person.profile;
+
+          const avatarHtml = person.avatar
+            ? `<img src="${escapeHtml(person.avatar)}" alt="${escapeHtml(person.login)}" loading="lazy" class="w-7 h-7 rounded-full border border-borderDark object-cover bg-bgInput shrink-0" onerror="this.style.display='none'" />`
+            : `<div class="w-7 h-7 rounded-full border border-borderDark bg-bgInput flex items-center justify-center text-xs font-mono text-textMuted shrink-0">${escapeHtml(person.login.charAt(0).toUpperCase())}</div>`;
+
+          const usernameHtml = isAnon
+            ? `<div class="flex items-center gap-2.5">
+                ${avatarHtml}
+                <span class="font-mono text-textMuted">${escapeHtml(person.login)}</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-borderDark text-textMuted">anon</span>
+              </div>`
+            : `<div class="flex items-center gap-2.5">
+                ${avatarHtml}
+                <a href="${escapeHtml(person.profile)}" target="_blank" rel="noopener noreferrer" class="font-mono font-medium text-textLight hover:text-amberAccent transition-colors inline-flex items-center gap-1">
+                  <span>${escapeHtml(person.login)}</span>
+                  <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-amberAccent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </a>
+              </div>`;
+
+          tr.innerHTML = `
+            <td class="py-3 px-4 text-center font-mono text-xs text-textMuted">${person.rank}</td>
+            <td class="py-3 px-4">${usernameHtml}</td>
+            <td class="py-3 px-4 text-textLight/90">${person.name ? escapeHtml(person.name) : '<span class="text-textMuted/40">&mdash;</span>'}</td>
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-xs font-semibold text-amberAccent w-14 text-right">${person.contributions.toLocaleString()}</span>
+                <div class="flex-1 h-1.5 bg-bgInput rounded-full overflow-hidden border border-borderDark/60 hidden sm:block">
+                  <div class="h-full bg-amberAccent/80 rounded-full" style="width: ${pct}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-xs text-textMuted">${person.company ? escapeHtml(person.company) : '<span class="text-textMuted/40">&mdash;</span>'}</td>
+            <td class="py-3 px-4 text-xs text-textMuted">${person.location ? escapeHtml(person.location) : '<span class="text-textMuted/40">&mdash;</span>'}</td>
+            <td class="py-3 px-4 text-right">
+              <div class="inline-flex items-center justify-end gap-1">
+                ${person.profile ? `
+                  <a href="${escapeHtml(person.profile)}" target="_blank" rel="noopener noreferrer" title="Open profile in browser" class="p-1.5 rounded hover:bg-borderDark text-textMuted hover:text-textLight transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </a>
+                ` : ''}
+                <button type="button" data-copy="${escapeHtml(person.login)}" data-label="username" title="Copy username" class="copy-btn p-1.5 rounded hover:bg-borderDark text-textMuted hover:text-amberAccent transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+                ${person.profile ? `
+                  <button type="button" data-copy="${escapeHtml(person.profile)}" data-label="profile link" title="Copy profile URL" class="copy-btn p-1.5 rounded hover:bg-borderDark text-textMuted hover:text-amberAccent transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          `;
+          fragment.appendChild(tr);
+        });
+
+        els.tableBody.appendChild(fragment);
+      }
+
+      function updateSummaryStats(shown) {
+        const totalContribs = state.people.reduce((acc, p) => acc + (p.contributions || 0), 0);
+        const anonCount = state.people.filter(p => p.type === 'Anonymous').length;
+
+        els.summaryStats.innerHTML = `
+          Showing <span class="text-textLight font-semibold">${shown.length.toLocaleString()}</span> of <span class="text-textLight font-semibold">${state.people.length.toLocaleString()}</span> contributors (<span class="text-textLight">${anonCount}</span> anonymous) &nbsp;|&nbsp; Total contributions: <span class="text-amberAccent font-semibold">${totalContribs.toLocaleString()}</span>
+        `;
+      }
+
+      function updateSortIcons() {
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+          const col = icon.getAttribute('data-col');
+          if (col === state.sortCol) {
+            icon.innerHTML = state.sortRev
+              ? `<svg class="w-3.5 h-3.5 text-amberAccent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>`
+              : `<svg class="w-3.5 h-3.5 text-amberAccent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>`;
+          } else {
+            icon.innerHTML = `<svg class="w-3.5 h-3.5 opacity-25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>`;
+          }
+        });
+      }
+
+      // --- Clipboard Helper (iframe-safe fallback) ---
+      function copyToClipboard(text, label) {
+        if (!text) return;
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showToast(`Copied ${label}: ${text}`, 'success');
+        } catch {
+          showToast('Failed to copy to clipboard', 'error');
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+
+      // --- Export Functions (CSV, JSON, Markdown) ---
+      function triggerDownload(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function exportData(format) {
+        const rows = state.shownRows || [];
+        if (rows.length === 0) {
+          showToast('Nothing to export. Fetch a repository first.', 'error');
+          return;
+        }
+
+        const baseName = (state.repo || 'contributors').replace('/', '_');
+        const fields = ['rank', 'login', 'name', 'contributions', 'company', 'location', 'profile'];
+
+        if (format === 'csv') {
+          const escapeCsv = val => {
+            const s = String(val ?? '');
+            if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+              return `"${s.replace(/"/g, '""')}"`;
+            }
+            return s;
+          };
+          const lines = [fields.join(',')];
+          rows.forEach(r => {
+            lines.push(fields.map(f => escapeCsv(r[f])).join(','));
+          });
+          triggerDownload('\uFEFF' + lines.join('\r\n'), `${baseName}.csv`, 'text/csv;charset=utf-8');
+          showToast(`Exported ${rows.length} rows to ${baseName}.csv`, 'success');
+        } else if (format === 'json') {
+          const cleanRows = rows.map(r => {
+            const obj = {};
+            fields.forEach(f => (obj[f] = r[f] ?? ''));
+            return obj;
+          });
+          triggerDownload(JSON.stringify(cleanRows, null, 2), `${baseName}.json`, 'application/json;charset=utf-8');
+          showToast(`Exported ${rows.length} rows to ${baseName}.json`, 'success');
+        } else if (format === 'md') {
+          const lines = [
+            `# Contributors of ${state.repo || 'Repository'}`,
+            '',
+            '| # | Username | Name | Contributions | Company | Location |',
+            '|---|----------|------|---------------|---------|----------|'
+          ];
+          rows.forEach(p => {
+            const user = p.profile ? `[${p.login}](${p.profile})` : p.login;
+            lines.push(
+              `| ${p.rank} | ${user} | ${p.name || ''} | ${p.contributions} | ${p.company || ''} | ${p.location || ''} |`
+            );
+          });
+          triggerDownload(lines.join('\n'), `${baseName}.md`, 'text/markdown;charset=utf-8');
+          showToast(`Exported ${rows.length} rows to ${baseName}.md`, 'success');
+        }
+      }
+
+      // --- Event Listeners ---
+      function bindEvents() {
+        els.fetchBtn.addEventListener('click', startFetch);
+
+        els.cancelBtn.addEventListener('click', () => {
+          if (state.abortController) {
+            state.abortController.abort();
+          }
+        });
+
+        els.clearRepoInputBtn.addEventListener('click', () => {
+          els.repoInput.value = '';
+          els.repoInput.focus();
+        });
+
+        els.repoInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            startFetch();
+          }
+        });
+
+        els.toggleTokenBtn.addEventListener('click', () => {
+          const isPwd = els.tokenInput.type === 'password';
+          els.tokenInput.type = isPwd ? 'text' : 'password';
+          els.eyeIconOpen.classList.toggle('hidden', isPwd);
+          els.eyeIconClosed.classList.toggle('hidden', !isPwd);
+        });
+
+        els.tokenInput.addEventListener('change', () => {
+          state.config.token = els.tokenInput.value.trim();
+          saveConfig();
+        });
+
+        els.detailsCheckbox.addEventListener('change', () => {
+          state.config.details = els.detailsCheckbox.checked;
+          saveConfig();
+        });
+
+        els.anonCheckbox.addEventListener('change', () => {
+          state.config.anon = els.anonCheckbox.checked;
+          saveConfig();
+        });
+
+        els.searchInput.addEventListener('input', refreshTable);
+
+        els.clearSearchBtn.addEventListener('click', () => {
+          els.searchInput.value = '';
+          refreshTable();
+          els.searchInput.focus();
+        });
+
+        els.minContribInput.addEventListener('input', refreshTable);
+
+        els.sortableHeaders.forEach(th => {
+          th.addEventListener('click', () => {
+            const col = th.getAttribute('data-sort');
+            if (state.sortCol === col) {
+              state.sortRev = !state.sortRev;
+            } else {
+              state.sortCol = col;
+              state.sortRev = col === 'contributions';
+            }
+            refreshTable();
+          });
+        });
+
+        els.tableBody.addEventListener('click', e => {
+          const copyBtn = e.target.closest('.copy-btn');
+          if (copyBtn) {
+            const val = copyBtn.getAttribute('data-copy');
+            const label = copyBtn.getAttribute('data-label') || 'value';
+            copyToClipboard(val, label);
+          }
+        });
+
+        els.clearCacheBtn.addEventListener('click', () => {
+          if (state.repo) {
+            removeCache(state.repo);
+            els.cacheBadge.classList.add('hidden');
+            els.cacheBadge.classList.remove('flex');
+            showToast(`Cleared local cache for ${state.repo}`, 'info');
+          }
+        });
+
+        els.exportCsvBtn.addEventListener('click', () => exportData('csv'));
+        els.exportJsonBtn.addEventListener('click', () => exportData('json'));
+        els.exportMdBtn.addEventListener('click', () => exportData('md'));
+
+        // Global Keyboard Shortcuts (Ctrl+F & Escape)
+        window.addEventListener('keydown', e => {
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            els.searchInput.focus();
+            els.searchInput.select();
+          } else if (e.key === 'Escape' && document.activeElement === els.searchInput) {
+            els.searchInput.value = '';
+            refreshTable();
+          }
+        });
+      }
+
+      // --- Initialization ---
+      function init() {
+        loadConfig();
+        els.repoInput.value = (state.config.repos && state.config.repos[0]) || DEFAULT_REPO;
+        els.tokenInput.value = state.config.token || '';
+        els.detailsCheckbox.checked = Boolean(state.config.details);
+        els.anonCheckbox.checked = state.config.anon !== false;
+
+        bindEvents();
+        updateSortIcons();
+
+        const initialRepo = parseRepoSafe(els.repoInput.value);
+        renderRecentRepos();
+
+        // Load from local cache if available, otherwise automatically fetch the default repo
+        if (!loadFromCacheIfAvailable(initialRepo) && initialRepo) {
+          startFetch();
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
