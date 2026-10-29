@@ -40,7 +40,7 @@ On Windows, use `py` in place of `python` if that is the Python launcher install
 
 ## Web Edition
 
-Open `github_contributors_viewer.html` in a modern browser, or publish it with GitHub Pages. The page uses Tailwind CSS and Google Fonts from their CDNs, so those visual resources require an internet connection.
+Open `github_contributors_viewer.html` in a modern browser. On GitHub Pages, the root [`index.html`](index.html) redirects visitors to the web edition automatically. The page uses Tailwind CSS and Google Fonts from their CDNs, so those visual resources require an internet connection.
 
 ## Using the Viewer
 
@@ -60,6 +60,7 @@ Contributor data is cached locally by each edition. The desktop cache is stored 
 .
 ├── github.py                       # Python/Tkinter desktop application
 ├── github_contributors_viewer.html # Standalone web application
+├── index.html                      # GitHub Pages entry point
 ├── requirements.txt                # Python dependencies
 ├── .gitignore                      # Local and generated files excluded from Git
 └── README.md
